@@ -27,7 +27,7 @@ class PurchaseFlightTicket(SequentialTaskSet):# класс с задачами (
                     'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
                     'accept-encoding': 'gzip, deflate, br, zstd'
                 },
-                 #debug_stream = sys.stderr
+                 debug_stream = sys.stderr
             )
     #======================================================================================================================================================================================
             self.client.get(
@@ -38,7 +38,7 @@ class PurchaseFlightTicket(SequentialTaskSet):# класс с задачами (
                     'accept-encoding': 'gzip, deflate, br, zstd'
                 },
                 allow_redirects=False,
-                #debug_stream = sys.stderr
+                debug_stream = sys.stderr
             )
     #======================================================================================================================================================================================
             with self.client.get(
@@ -50,7 +50,7 @@ class PurchaseFlightTicket(SequentialTaskSet):# класс с задачами (
                 },
                 allow_redirects=False,
                 catch_response=True,
-                #debug_stream = sys.stderr
+                debug_stream = sys.stderr
             ) as req_01_3_response:
                 check_http_response(req_01_3_response, "name=\"userSession\"")
             self.userSession = re.search(r'name=\"userSession\" value=\"(.*)\"/>', req_01_3_response.text).group(1)
@@ -85,8 +85,39 @@ class PurchaseFlightTicket(SequentialTaskSet):# класс с задачами (
             ) as req_02_1_response:
                 check_http_response(req_02_1_response, "User password was correct")
 
+#======================================================================================================================================================================================
 
-#=========================================================================================================================================================================================
+            with self.client.get(
+                '/cgi-bin/nav.pl?page=menu&in=home',
+                name='REQ_02_2_/cgi-bin/nav.pl?page=menu&in=home',
+                headers={
+                    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                    'accept-encoding': 'gzip, deflate, br, zstd',
+                    'content-type': 'application/x-www-form-urlencoded'
+                },
+                data=req_body_02_1,
+                catch_response=True,
+                debug_stream = sys.stderr
+            )   as req_02_2_response:
+                check_http_response(req_02_2_response, "<title>Web Tours Navigation Bar</title>")
+
+#=======================================================================================================================================================================================
+
+            with self.client.get(
+                    '/cgi-bin/login.pl?intro=true',
+                    name='REQ_02_3_/cgi-bin/login.pl?intro=true',
+                    headers={
+                        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                        'accept-encoding': 'gzip, deflate, br, zstd',
+                        'content-type': 'application/x-www-form-urlencoded'
+                    },
+                    allow_redirects=False,
+                    catch_response=True,
+                    debug_stream = sys.stderr
+            ) as req_02_3_response:
+                check_http_response(req_02_3_response, f"Welcome, <b>{userLogin}</b>, to the Web Tours reservation pages")
+
+#=====================================================================================================================================================================================
         uc_01_getHomePage(self)
         uc_02_post_login(self)
 
