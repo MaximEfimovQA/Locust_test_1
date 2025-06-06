@@ -43,8 +43,7 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                     allow_redirects=False,
                     # debug_stream = sys.stderr
             ) as req01_01_2_response:
-                check_http_response(req01_01_2_response,
-                                    "A Session ID has been created and loaded into a cookie called MSO")
+                check_http_response(req01_01_2_response, "A Session ID has been created and loaded into a cookie called MSO")
                 # ==========================================================================================================================================================================================================
             with self.client.get(
                     '/cgi-bin/nav.pl?in=home',
@@ -117,8 +116,7 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                     catch_response=True,
                     # debug_stream = sys.stderr
             ) as req01_02_3_response:
-                check_http_response(req01_02_3_response,
-                                    f"Welcome, <b>{self.userLogin}</b>, to the Web Tours reservation pages")
+                check_http_response(req01_02_3_response,f"Welcome, <b>{self.userLogin}</b>, to the Web Tours reservation pages")
 
         uc01_01_getHomePage(self)
         uc01_02_post_login(self)

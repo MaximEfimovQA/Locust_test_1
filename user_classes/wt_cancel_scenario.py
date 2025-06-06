@@ -21,7 +21,7 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
 
         @task
         def uc02_01_getHomePage(self) -> None:
-            self.client.get(
+            with self.client.get(
                 '/WebTours/',
                 name='REQ02_01_1_/WebTours/',
                 headers={
@@ -29,9 +29,10 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                     'accept-encoding': 'gzip, deflate, br, zstd'
                 },
                 #  debug_stream = sys.stderr
-            )
+            )as req02_01_1_response:
+                check_http_response(req02_01_1_response, "Web Tours")
             # ==========================================================================================================================================================================================================
-            self.client.get(
+            with self.client.get(
                 '/cgi-bin/welcome.pl?signOff=true',
                 name='REQ02_01_2_/cgi-bin/welcome.pl?signOff=true',
                 headers={
@@ -40,7 +41,8 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                 },
                 allow_redirects=False,
                 # debug_stream = sys.stderr
-            )
+            )as req02_01_2_response:
+                check_http_response(req02_01_2_response, "A Session ID has been created and loaded into a cookie called MSO")
             # ==========================================================================================================================================================================================================
             with self.client.get(
                     '/cgi-bin/nav.pl?in=home',
