@@ -51,7 +51,7 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                     },
                     allow_redirects=False,
                     catch_response=True,
-                    debug_stream=sys.stderr
+                    #debug_stream=sys.stderr
             ) as req02_01_3_response:
                 check_http_response(req02_01_3_response, "name=\"userSession\"")
             self.userSession = re.search(r'name=\"userSession\" value=\"(.*)\"/>', req02_01_3_response.text).group(1)

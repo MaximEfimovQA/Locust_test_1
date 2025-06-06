@@ -22,27 +22,30 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
 
         @task
         def uc01_01_getHomePage(self) -> None:
-            self.client.get(
-                '/WebTours/',
-                name='REQ01_01_1_/WebTours/',
-                headers={
-                    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-                    'accept-encoding': 'gzip, deflate, br, zstd'
-                },
-                #  debug_stream = sys.stderr
-            )
-            # ==========================================================================================================================================================================================================
-            self.client.get(
-                '/cgi-bin/welcome.pl?signOff=true',
-                name='REQ01_01_2_/cgi-bin/welcome.pl?signOff=true',
-                headers={
-                    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-                    'accept-encoding': 'gzip, deflate, br, zstd'
-                },
-                allow_redirects=False,
-                # debug_stream = sys.stderr
-            )
-            # ==========================================================================================================================================================================================================
+            with self.client.get(
+                    '/WebTours/',
+                    name='REQ01_01_1_/WebTours/',
+                    headers={
+                        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                        'accept-encoding': 'gzip, deflate, br, zstd'
+                    },
+                    #  debug_stream = sys.stderr
+            ) as req01_01_1_response:
+                check_http_response(req01_01_1_response, "Web Tours")
+                # ==========================================================================================================================================================================================================
+            with self.client.get(
+                    '/cgi-bin/welcome.pl?signOff=true',
+                    name='REQ01_01_2_/cgi-bin/welcome.pl?signOff=true',
+                    headers={
+                        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                        'accept-encoding': 'gzip, deflate, br, zstd'
+                    },
+                    allow_redirects=False,
+                    # debug_stream = sys.stderr
+            ) as req01_01_2_response:
+                check_http_response(req01_01_2_response,
+                                    "A Session ID has been created and loaded into a cookie called MSO")
+                # ==========================================================================================================================================================================================================
             with self.client.get(
                     '/cgi-bin/nav.pl?in=home',
                     name='REQ01_01_3_/cgi-bin/nav.pl?in=home',
@@ -52,7 +55,7 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                     },
                     allow_redirects=False,
                     catch_response=True,
-                    debug_stream=sys.stderr
+                    #debug_stream=sys.stderr
             ) as req01_01_3_response:
                 check_http_response(req01_01_3_response, "name=\"userSession\"")
             self.userSession = re.search(r'name=\"userSession\" value=\"(.*)\"/>', req01_01_3_response.text).group(1)
@@ -114,7 +117,8 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                     catch_response=True,
                     # debug_stream = sys.stderr
             ) as req01_02_3_response:
-                check_http_response(req01_02_3_response,f"Welcome, <b>{self.userLogin}</b>, to the Web Tours reservation pages")
+                check_http_response(req01_02_3_response,
+                                    f"Welcome, <b>{self.userLogin}</b>, to the Web Tours reservation pages")
 
         uc01_01_getHomePage(self)
         uc01_02_post_login(self)
@@ -189,18 +193,16 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                 },
                 data=req_body01_04_1,
                 catch_response=True,
-                debug_stream=sys.stderr
+               # debug_stream=sys.stderr
         ) as req01_04_1_response:
             check_http_response(req01_04_1_response, "name=\"outboundFlight\"")
         self.outboundFlight = re.search(r' name=\"outboundFlight\" value=\"(.*)\">', req01_04_1_response.text).group(1)
 
-
-# =============================================================================================================================================================================================================
-#                                                                        ||| SCRIPT 5  ВЫБОР БИЛЕТА |||
-# ==============================================================================================================================================================================================================
+    # =============================================================================================================================================================================================================
+    #                                                                        ||| SCRIPT 5  ВЫБОР БИЛЕТА |||
+    # ==============================================================================================================================================================================================================
     @task
     def uc1_05_choiceFlight(self):
-
         req_body01_05_1 = f'outboundFlight={unquote_plus(self.outboundFlight)}&numPassengers=1&advanceDiscount=0&seatType={self.seatType}&seatPref={self.seatPref}&reserveFlights.x=44&reserveFlights.y=5'
 
         with self.client.post(
@@ -213,17 +215,15 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                 },
                 data=req_body01_05_1,
                 catch_response=True,
-                #debug_stream=sys.stderr
+                # debug_stream=sys.stderr
         ) as req01_05_1_response:
             check_http_response(req01_05_1_response, "Flight Reservation")
 
-
-# =============================================================================================================================================================================================================
-#                                                                        ||| SCRIPT 6  ОПЛАТА БИЛЕТА |||
- # ==============================================================================================================================================================================================================
+    # =============================================================================================================================================================================================================
+    #                                                                        ||| SCRIPT 6  ОПЛАТА БИЛЕТА |||
+    # ==============================================================================================================================================================================================================
     @task
     def uc01_06_paymentFlight(self):
-
         self.expDate = self.seat_data_row['expDate']
 
         self.creditCard = self.seat_data_row['creditCard']
@@ -233,7 +233,6 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
         self.address2 = self.user_data_row['address2']
 
         self.pass1 = self.user_data_row['pass1']
-
 
         req_body01_06_1 = f'firstName={self.userLogin}&lastName={self.userPass}&address1={self.address1}&address2={self.address2}&pass1={self.pass1}&creditCard={self.creditCard}&expDate={self.expDate}&oldCCOption=&numPassengers=1&seatType={self.seatType}&seatPref={self.seatPref}&outboundFlight={unquote_plus(self.outboundFlight)}&advanceDiscount=0&returnFlight=&JSFormSubmit=off&buyFlights.x=51&buyFlights.y=8&.cgifields=saveCC'
 
@@ -247,13 +246,14 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                 },
                 data=req_body01_06_1,
                 catch_response=True,
-                debug_stream=sys.stderr
+               # debug_stream=sys.stderr
         ) as req01_06_1_response:
             check_http_response(req01_06_1_response, f"from {self.depart} to {self.arrive}.</u></b>")
 
-#=====================================================================================================================================================================================================================
+
+# =====================================================================================================================================================================================================================
 #                                                                                 ||| END |||
-#=====================================================================================================================================================================================================================
+# =====================================================================================================================================================================================================================
 class WebToursBaseUserClass(FastHttpUser):  # юзер-класс, принимающий в себя основные параметры теста
     wait_time = constant_pacing(cfg.pacing)
     host = cfg.url
