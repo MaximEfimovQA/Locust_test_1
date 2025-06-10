@@ -17,18 +17,20 @@ class CustomLoadShape(LoadTestShape):
             ]
         case 'stages':
             stages = [
-                {'duration': 600, 'users': 5, 'spawn_rate': 2},
-                {'duration': 600, 'users': 10, 'spawn_rate': 2},
-                {'duration': 600, 'users': 15, 'spawn_rate': 3},
-                {'duration': 600, 'users': 20, 'spawn_rate': 3},
-                {'duration': 600, 'users': 25, 'spawn_rate': 3},
+                {'duration': 600, 'users': 5, 'spawn_rate': 1},
+                {'duration': 600, 'users': 10, 'spawn_rate': 1},
+                {'duration': 600, 'users': 15, 'spawn_rate': 1},
+                {'duration': 600, 'users': 20, 'spawn_rate': 1},
+                {'duration': 600, 'users': 25, 'spawn_rate': 1},
             ]
-    def tick(self): # стандартная функция локаста, взятая из документации, для работы с кастомными "Лоад-Шейпами"
+
+    def tick(self):
         run_time = self.get_run_time()
+        cumulative_time = 0  # Накопленное время всех предыдущих ступеней
 
         for stage in self.stages:
-            if run_time < stage["duration"]:
-                tick_data = (stage["users"], stage["spawn_rate"])
-                return tick_data
+            cumulative_time += stage["duration"]
+            if run_time < cumulative_time:  # Сравниваем с накопленным временем
+                return (stage["users"], stage["spawn_rate"])
 
         return None

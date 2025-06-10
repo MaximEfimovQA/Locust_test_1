@@ -157,7 +157,7 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                 },
                 allow_redirects=False,
                 catch_response=True,
-                debug_stream=sys.stderr
+                #debug_stream=sys.stderr
         ) as req02_03_3_response:
             check_http_response(req02_03_3_response, "Flights List")
         self.flightsID = re.findall(r'name=\"flightID\" value=\"(.*)\"', req02_03_3_response.text)
@@ -171,7 +171,6 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
 
 
         req_body02_04_1 = processCancelRequestBody(self.flightsID, self.cgifields)
-        logger.info(f'CANCEL {req_body02_04_1}')
         with self.client.post(
                 '/cgi-bin/itinerary.pl',
                 name='REQ02_04_1_/cgi-bin/itinerary.pl',
@@ -182,7 +181,7 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                 },
                 data=req_body02_04_1,
                 catch_response=True,
-                debug_stream=sys.stderr
+                #debug_stream=sys.stderr
         ) as req02_04_1_response:
            check_http_response(req02_04_1_response, "Flights List")
 
