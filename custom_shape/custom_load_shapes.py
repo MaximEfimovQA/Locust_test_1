@@ -17,11 +17,11 @@ class CustomLoadShape(LoadTestShape):
             ]
         case 'stages':
             stages = [
+                {'duration': 600, 'users': 5, 'spawn_rate': 2},
                 {'duration': 600, 'users': 10, 'spawn_rate': 2},
-                {'duration': 600, 'users': 20, 'spawn_rate': 2},
-                {'duration': 600, 'users': 30, 'spawn_rate': 2},
-                {'duration': 600, 'users': 40, 'spawn_rate': 2},
-                {'duration': 600, 'users': 50, 'spawn_rate': 2},
+                {'duration': 600, 'users': 15, 'spawn_rate': 3},
+                {'duration': 600, 'users': 20, 'spawn_rate': 3},
+                {'duration': 600, 'users': 25, 'spawn_rate': 3},
             ]
     def tick(self): # стандартная функция локаста, взятая из документации, для работы с кастомными "Лоад-Шейпами"
         run_time = self.get_run_time()

@@ -191,7 +191,7 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                 },
                 data=req_body01_04_1,
                 catch_response=True,
-               # debug_stream=sys.stderr
+                debug_stream=sys.stderr
         ) as req01_04_1_response:
             check_http_response(req01_04_1_response, "name=\"outboundFlight\"")
         self.outboundFlight = re.search(r' name=\"outboundFlight\" value=\"(.*)\">', req01_04_1_response.text).group(1)
@@ -244,7 +244,7 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                 },
                 data=req_body01_06_1,
                 catch_response=True,
-               # debug_stream=sys.stderr
+                debug_stream=sys.stderr
         ) as req01_06_1_response:
             check_http_response(req01_06_1_response, f"from {self.depart} to {self.arrive}.</u></b>")
 
@@ -253,7 +253,7 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
 #                                                                                 ||| END |||
 # =====================================================================================================================================================================================================================
 class WebToursBaseUserClass(FastHttpUser):  # юзер-класс, принимающий в себя основные параметры теста
-    wait_time = constant_pacing(cfg.pacing)
+    wait_time = constant_pacing(cfg.webtours_base.pacing)
     host = cfg.url
 
     logger.info(f'WebToursBaseClass started. Host: {host}')

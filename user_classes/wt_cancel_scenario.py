@@ -2,7 +2,7 @@ from locust import task, SequentialTaskSet, FastHttpUser, HttpUser, constant_pac
 from config.config import cfg, logger
 import sys, re
 from utils.assertion import check_http_response
-from utils.non_test_methods import open_csv_field
+from utils.non_test_methods import open_csv_field, processCancelRequestBody
 import random
 from urllib.parse import unquote_plus
 
@@ -157,15 +157,40 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                 },
                 allow_redirects=False,
                 catch_response=True,
-                # debug_stream=sys.stderr
+                debug_stream=sys.stderr
         ) as req02_03_3_response:
             check_http_response(req02_03_3_response, "Flights List")
+        self.flightsID = re.findall(r'name=\"flightID\" value=\"(.*)\"', req02_03_3_response.text)
+        self.cgifields = re.findall(r'name=\".cgifields\" value=\"([0-9]{1,4})\"', req02_03_3_response.text)
+
+   # =========================================================================================================================================================================================================
+    #                                                                    ||| SCRIPT 4 УДАЛИТЬ БИЛЕТЫ |||
+    # =========================================================================================================================================================================================================
+    @task
+    def uc02_04_deleteTickets(self) -> None:
+
+
+        req_body02_04_1 = processCancelRequestBody(self.flightsID, self.cgifields)
+        logger.info(f'CANCEL {req_body02_04_1}')
+        with self.client.post(
+                '/cgi-bin/itinerary.pl',
+                name='REQ02_04_1_/cgi-bin/itinerary.pl',
+                headers={
+                    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                    'accept-encoding': 'gzip, deflate, br, zstd',
+                    'content-type': 'application/x-www-form-urlencoded'
+                },
+                data=req_body02_04_1,
+                catch_response=True,
+                debug_stream=sys.stderr
+        ) as req02_04_1_response:
+           check_http_response(req02_04_1_response, "Flights List")
 
 #=====================================================================================================================================================================================================================
 #                                                                                 ||| END |||
 #=====================================================================================================================================================================================================================
 class WebToursCancelUserClass(FastHttpUser):  # юзер-класс, принимающий в себя основные параметры теста
-    wait_time = constant_pacing(cfg.pacing)
+    wait_time = constant_pacing(cfg.webtours_cancel.pacing)
     host = cfg.url
 
     logger.info(f'WebToursBaseClass started. Host: {host}')

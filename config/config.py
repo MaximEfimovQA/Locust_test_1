@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 """
 class ScenarioConfig(BaseModel):
     included: bool
-   # url: str
+    pacing: int
     weight: int
 
 """ 
@@ -28,7 +28,7 @@ class Config(BaseSettings): # данный класс является осно�
     loadshape_type: str = Field('baseline', env='LOADSHAPE_TYPE')
     webtours_base: WebToursBaseScenarioConfig
     webtours_cancel: WebToursCancelScenarioConfig
-    pacing: int = Field(5, env='CONST_PACING')
+
 
 
 """  
