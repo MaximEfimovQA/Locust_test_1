@@ -192,7 +192,7 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                 # Нет рейсов — считаем успешно
                 req02_04_1_response.success()
             elif "database synchronization error" in req02_04_1_response.text:
-                # Ошибка базы данных связанная с проблемами WEBTOURS, поэтому игнорируем
+                # Ошибка базы данных связанная с проблемами WEBTOURS
                 req02_04_1_response.error_message = "Database sync error - tickets not deleted"
                 req02_04_1_response.error_status = "error"
             else:
