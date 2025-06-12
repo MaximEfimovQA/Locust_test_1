@@ -13,7 +13,6 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
 
     test_users_data = open_csv_field(test_user_csv_file_path)
 
-
     def on_start(self) -> None:
         # =====================================================================================================================================================================================================
         #                                                               ||| SCRIPT 1  ДОМАШНЯЯ СТРАНИЦА |||
@@ -22,27 +21,28 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
         @task
         def uc02_01_getHomePage(self) -> None:
             with self.client.get(
-                '/WebTours/',
-                name='REQ02_01_1_/WebTours/',
-                headers={
-                    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-                    'accept-encoding': 'gzip, deflate, br, zstd'
-                },
-                #  debug_stream = sys.stderr
-            )as req02_01_1_response:
+                    '/WebTours/',
+                    name='REQ02_01_1_/WebTours/',
+                    headers={
+                        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                        'accept-encoding': 'gzip, deflate, br, zstd'
+                    },
+                    #  debug_stream = sys.stderr
+            ) as req02_01_1_response:
                 check_http_response(req02_01_1_response, "Web Tours")
             # ==========================================================================================================================================================================================================
             with self.client.get(
-                '/cgi-bin/welcome.pl?signOff=true',
-                name='REQ02_01_2_/cgi-bin/welcome.pl?signOff=true',
-                headers={
-                    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-                    'accept-encoding': 'gzip, deflate, br, zstd'
-                },
-                allow_redirects=False,
-                # debug_stream = sys.stderr
-            )as req02_01_2_response:
-                check_http_response(req02_01_2_response, "A Session ID has been created and loaded into a cookie called MSO")
+                    '/cgi-bin/welcome.pl?signOff=true',
+                    name='REQ02_01_2_/cgi-bin/welcome.pl?signOff=true',
+                    headers={
+                        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                        'accept-encoding': 'gzip, deflate, br, zstd'
+                    },
+                    allow_redirects=False,
+                    # debug_stream = sys.stderr
+            ) as req02_01_2_response:
+                check_http_response(req02_01_2_response,
+                                    "A Session ID has been created and loaded into a cookie called MSO")
             # ==========================================================================================================================================================================================================
             with self.client.get(
                     '/cgi-bin/nav.pl?in=home',
@@ -53,7 +53,7 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                     },
                     allow_redirects=False,
                     catch_response=True,
-                    #debug_stream=sys.stderr
+                    # debug_stream=sys.stderr
             ) as req02_01_3_response:
                 check_http_response(req02_01_3_response, "name=\"userSession\"")
             self.userSession = re.search(r'name=\"userSession\" value=\"(.*)\"/>', req02_01_3_response.text).group(1)
@@ -115,7 +115,8 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                     catch_response=True,
                     # debug_stream = sys.stderr
             ) as req02_02_3_response:
-                check_http_response(req02_02_3_response,f"Welcome, <b>{self.userLogin}</b>, to the Web Tours reservation pages")
+                check_http_response(req02_02_3_response,
+                                    f"Welcome, <b>{self.userLogin}</b>, to the Web Tours reservation pages")
 
         uc02_01_getHomePage(self)
         uc02_02_post_login(self)
@@ -157,19 +158,17 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                 },
                 allow_redirects=False,
                 catch_response=True,
-                #debug_stream=sys.stderr
+                # debug_stream=sys.stderr
         ) as req02_03_3_response:
             check_http_response(req02_03_3_response, "Flights List")
         self.flightsID = re.findall(r'name=\"flightID\" value=\"(.*)\"', req02_03_3_response.text)
         self.cgifields = re.findall(r'name=\".cgifields\" value=\"([0-9]{1,4})\"', req02_03_3_response.text)
 
-   # =========================================================================================================================================================================================================
+    # =========================================================================================================================================================================================================
     #                                                                    ||| SCRIPT 4 УДАЛИТЬ БИЛЕТЫ |||
     # =========================================================================================================================================================================================================
     @task
     def uc02_04_deleteTickets(self) -> None:
-
-
         req_body02_04_1 = processCancelRequestBody(self.flightsID, self.cgifields)
         with self.client.post(
                 '/cgi-bin/itinerary.pl',
@@ -181,13 +180,30 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                 },
                 data=req_body02_04_1,
                 catch_response=True,
-                #debug_stream=sys.stderr
+                debug_stream=sys.stderr
         ) as req02_04_1_response:
-           check_http_response(req02_04_1_response, "Flights List")
+            if ("<b>A total of" in req02_04_1_response.text):
+                # Есть список рейсов
+                req02_04_1_response.success()
+                match = re.search(r'<b>A total of (.*) scheduled flights\.</font></b>', req02_04_1_response.text)
+                if match:
+                    self.ticket_count = int(match.group(1))
+            elif "No flights have been reserved" in req02_04_1_response.text:
+                # Нет рейсов — считаем успешно
+                req02_04_1_response.success()
+            elif "database synchronization error" in req02_04_1_response.text:
+                # Ошибка базы данных связанная с проблемами WEBTOURS, поэтому игнорируем
+                req02_04_1_response.error_message = "Database sync error - tickets not deleted"
+                req02_04_1_response.error_status = "error"
+            else:
+                req02_04_1_response.failure("no ticket")  # Если это все сверху не сработало, то будет эта ошибка
 
-#=====================================================================================================================================================================================================================
+
+
+
+# =====================================================================================================================================================================================================================
 #                                                                                 ||| END |||
-#=====================================================================================================================================================================================================================
+# =====================================================================================================================================================================================================================
 class WebToursCancelUserClass(FastHttpUser):  # юзер-класс, принимающий в себя основные параметры теста
     wait_time = constant_pacing(cfg.webtours_cancel.pacing)
     host = cfg.url
