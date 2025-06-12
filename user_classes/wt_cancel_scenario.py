@@ -182,7 +182,7 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
                 catch_response=True,
                 debug_stream=sys.stderr
         ) as req02_04_1_response:
-            if ("<b>A total of" in req02_04_1_response.text):
+            if "<b>A total of" in req02_04_1_response.text :
                 # Есть список рейсов
                 req02_04_1_response.success()
                 match = re.search(r'<b>A total of (.*) scheduled flights\.</font></b>', req02_04_1_response.text)
@@ -194,7 +194,7 @@ class PurchaseFlightTicket(SequentialTaskSet):  # класс с задачами
             elif "database synchronization error" in req02_04_1_response.text:
                 # Ошибка базы данных связанная с проблемами WEBTOURS
                 req02_04_1_response.error_message = "Database sync error - tickets not deleted"
-                req02_04_1_response.error_status = "error"
+                req02_04_1_response.error_status = "error WEBTOURS"
             else:
                 req02_04_1_response.failure("no ticket")  # Если это все сверху не сработало, то будет эта ошибка
 
